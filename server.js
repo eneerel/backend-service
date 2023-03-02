@@ -5,8 +5,19 @@ const categoriesRoute = require("./routes/categories");
 const logger = require("./utils/logger");
 const port = 8000;
 const server = express();
+const mysql = require ("mysql2");
+
+const connection = mysql.createConnection({
+  host: "localhost",
+  port:3306,
+  user:"root",
+  password:"",
+  database:"azure_db",
+
+});
 server.use(cors());
 server.use(express.json());
+
 
 server.use(logger);
 
