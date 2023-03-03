@@ -3,7 +3,7 @@ const cors = require("cors");
 const usersRoute = require("./routes/users");
 const categoriesRoute = require("./routes/categories");
 const logger = require("./utils/logger");
-const port = 8000;
+const port = 8001;
 const server = express();
 const mysql = require("mysql2");
 
@@ -48,7 +48,7 @@ server.get("/:id", async (req, res) => {
 server.post("/", async (req, res) => {
   const { id } = req.params;
   connection.query(
-    `INSERT INTO azure_user(aid, name ,owog) VALUE("${id}","${req.body.name}","${req.body.owog}")`,
+    `INSERT INTO azure_user(aid, name ,owog) VALUE(${id},"${req.body.name}","${req.body.owog}")`,
     (err, result) => {
       if (err) {
         res.status(400).json({ message: err.message });
@@ -62,8 +62,15 @@ server.post("/", async (req, res) => {
 
 server.put("/:id", async (req, res) => {
   const { id } = req.params;
+  const body = req.body;
+  const keys = Object.keys(body);
+  const map = keys.map((key) => {
+    `${key}="${body[key]}"`;
+  });
+  const join = map.join();
+
   connection.query(
-    `UPDATE  azure_user SET name="${req.body.name}", owog="${req.body.owog}" WHERE aid=${id}`,
+    `UPDATE azure_user SET ${join} WHERE aid=${id}`,
     (err, result) => {
       if (err) {
         res.status(400).json({ message: err.message });
