@@ -1,27 +1,30 @@
 const bcrypt = require("bcrypt");
-const fs = require("fs");
-const filePath = "./data/users.json.";
 const connection = require("../config/db");
+const { convertQueryStr } = require("../utils/convertQuery");
 
 const getAllUsers = (req, res) => {
-  fs.readFile(filePath, "utf-8", (err, data) => {
+  const query = `SELECT * FROM users`;
+  connection.query(query, (err, result) => {
     if (err) {
-      console.log("Файл уншихад алдаа гарлаа. !!!");
+      res.status(400).json({ error: err.message });
       return;
     }
-    console.log(data);
-    const parsedData = JSON.parse(data);
-    res.status(201).json({ users: parsedData.users });
+    res.status(201).json({ message: "Amjilttai", result });
   });
 };
 
 const getUser = (req, res) => {
   const { id } = req.params;
-  const data = fs.readFileSync(filePath, "utf-8");
-  const parsedData = JSON.parse(data);
-  const user = parsedData.users.find((el) => el.id === id);
-  res.status(200).json({ user });
+  const query = `SELECT * FROM users WHERE id=${id}`;
+  connection.query(query, (err, result) => {
+    if (err) {
+      res.status(400).json({ error: err.message });
+      return;
+    }
+    res.status(201).json({ message: "Amjilttai", result });
+  });
 };
+
 const createUser = (req, res) => {
   const { name, email, password, phoneNumber } = req.body;
   const salted = bcrypt.genSaltSync(10);
@@ -43,27 +46,33 @@ const createUser = (req, res) => {
     }
   );
 };
-const deleteUser = (req, res) => {
-  const { id } = req.params;
-  const data = fs.readFileSync(filePath, "utf-8");
-  const parsedData = JSON.parse(data);
-  const findIndex = parsedData.users.findIndex((el) => el.id === id);
-  parsedData.users.splice(findIndex, 1);
-  fs.writeFileSync(filePath, JSON.stringify(parsedData));
-  res
-    .status(201)
-    .json({ message: `${id} тай хэрэглэгч амжилттай устгагдлаа.` });
-};
+
+const deleteUser =
+  ("/:id",
+  async (req, res) => {
+    const { id } = req.params;
+    connection.query(`DELETE FROM users WHERE id=${id}`, (err, result) => {
+      if (err) {
+        res.status(400).json({ message: err.message });
+
+        return;
+      }
+      res.status(200).json({ message: "success" });
+    });
+  });
+
 const updateUser = (req, res) => {
   const { id } = req.params;
-  const { name } = req.body;
-  const data = fs.readFileSync(filePath, "utf-8");
-  const parsedData = JSON.parse(data);
-  const findIndex = parsedData.users.findIndex((el) => el.id === id);
-  parsedData.users[findIndex].name = name;
-  fs.writeFileSync(filePath, JSON.stringify(parsedData));
-  res
-    .status(201)
-    .json({ message: "Шинэ хэрэглэгчийн өгөгдөл амжилттай солигдлоо." });
+  const updateData = convertQueryStr(req.body);
+
+  const query = `UPDATE users SET ${updateData} WHERE id=${id}`;
+  connection.query(query, (err, result) => {
+    if (err) {
+      res.status(400).JSON({ messege: err.message });
+      return;
+    }
+    res.status(200).json({ messege: "amjilttai", data: result });
+  });
 };
+
 module.exports = { getAllUsers, getUser, createUser, deleteUser, updateUser };
